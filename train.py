@@ -1,17 +1,3 @@
-"""
-train.py — Brain Tumor Detection Model Training
-================================================
-Uses VGG16 transfer learning to classify MRI scans as tumor/no-tumor.
-
-Dataset structure expected:
-    dataset/
-        yes/   ← MRI images WITH tumor
-        no/    ← MRI images WITHOUT tumor
-
-Run: python train.py
-Output: model/brain_tumor_model.h5
-"""
-
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,15 +12,13 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, i
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam
 
-# ─── Configuration ────────────────────────────────────────────────────────────
-IMG_SIZE    = 224          # VGG16 expects 224×224
+IMG_SIZE    = 224        
 BATCH_SIZE  = 16
-EPOCHS      = 20           # EarlyStopping will cut this short if needed
+EPOCHS      = 20           
 DATASET_DIR = "dataset"
 MODEL_DIR   = "model"
 MODEL_PATH  = os.path.join(MODEL_DIR, "brain_tumor_model.h5")
 
-# ─── 1. Load images from dataset/yes and dataset/no ──────────────────────────
 print("[INFO] Loading dataset...")
 
 images = []
@@ -63,13 +47,11 @@ X = np.array(images)
 y = np.array(labels)
 print(f"[INFO] Total samples: {len(X)}  |  Tumor: {y.sum()}  |  No Tumor: {(y==0).sum()}")
 
-# ─── 2. Train / Validation split ──────────────────────────────────────────────
 X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 print(f"[INFO] Train: {len(X_train)}  |  Val: {len(X_val)}")
 
-# ─── 3. Data Augmentation (helps prevent overfitting on small datasets) ────────
 train_gen = ImageDataGenerator(
     rotation_range=15,
     width_shift_range=0.1,
@@ -78,21 +60,17 @@ train_gen = ImageDataGenerator(
     zoom_range=0.1,
 )
 train_gen.fit(X_train)
-
-# ─── 4. Build model with VGG16 as feature extractor ───────────────────────────
 print("[INFO] Building VGG16 transfer learning model...")
 
 base_model = VGG16(
-    weights="imagenet",       # pretrained on ImageNet
-    include_top=False,        # remove VGG16's classifier head
+    weights="imagenet",      
+    include_top=False,       
     input_shape=(IMG_SIZE, IMG_SIZE, 3)
 )
 
-# Freeze all VGG16 layers — we only train the new head first
 for layer in base_model.layers:
     layer.trainable = False
 
-# Custom classification head
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
 x = BatchNormalization()(x)
@@ -100,7 +78,7 @@ x = Dense(256, activation="relu")(x)
 x = Dropout(0.5)(x)
 x = Dense(64, activation="relu")(x)
 x = Dropout(0.3)(x)
-output = Dense(1, activation="sigmoid")(x)   # binary output
+output = Dense(1, activation="sigmoid")(x)  
 
 model = Model(inputs=base_model.input, outputs=output)
 
@@ -111,8 +89,6 @@ model.compile(
 )
 
 model.summary()
-
-# ─── 5. Callbacks ─────────────────────────────────────────────────────────────
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 callbacks = [
@@ -121,7 +97,6 @@ callbacks = [
     ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-7, verbose=1),
 ]
 
-# ─── 6. Phase 1: Train only the new head ──────────────────────────────────────
 print("\n[PHASE 1] Training classification head (VGG16 frozen)...")
 history1 = model.fit(
     train_gen.flow(X_train, y_train, batch_size=BATCH_SIZE),
@@ -131,14 +106,11 @@ history1 = model.fit(
     verbose=1,
 )
 
-# ─── 7. Phase 2: Fine-tune top VGG16 layers ───────────────────────────────────
 print("\n[PHASE 2] Fine-tuning top VGG16 layers...")
 
-# Unfreeze the last 4 convolutional layers
 for layer in base_model.layers[-4:]:
     layer.trainable = True
 
-# Recompile with a lower learning rate for fine-tuning
 model.compile(
     optimizer=Adam(learning_rate=1e-5),
     loss="binary_crossentropy",
@@ -153,7 +125,6 @@ history2 = model.fit(
     verbose=1,
 )
 
-# ─── 8. Evaluate on validation set ────────────────────────────────────────────
 print("\n[INFO] Evaluating model...")
 loss, accuracy, auc = model.evaluate(X_val, y_val, verbose=0)
 print(f"  Validation Accuracy : {accuracy*100:.2f}%")
@@ -164,7 +135,6 @@ y_pred = (model.predict(X_val) > 0.5).astype(int).flatten()
 print("\nClassification Report:")
 print(classification_report(y_val, y_pred, target_names=["No Tumor", "Tumor"]))
 
-# ─── 9. Plot training curves ───────────────────────────────────────────────────
 def merge_history(h1, h2, key):
     return h1.history.get(key, []) + h2.history.get(key, [])
 
