@@ -1,12 +1,12 @@
-# 🧠 Brain Tumor Detection using Deep Learning
+#  Brain Tumor Detection using Deep Learning
 
-## 📌 Overview
+##  Overview
 
 This project is a web-based application that detects the presence of brain tumors from MRI images using a trained deep learning model. The model is integrated into a Flask web app where users can upload an MRI scan and receive a prediction.
 
 ---
 
-## 🚀 Features
+##  Features
 
 * Upload MRI images through a web interface
 * Predict whether a tumor is present or not
@@ -15,7 +15,7 @@ This project is a web-based application that detects the presence of brain tumor
 
 ---
 
-## 🧠 Model Details
+##  Model Details
 
 * Convolutional Neural Network (CNN)
 * Binary Classification:
@@ -26,7 +26,7 @@ This project is a web-based application that detects the presence of brain tumor
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 * Python
 * TensorFlow / Keras
@@ -35,7 +35,7 @@ This project is a web-based application that detects the presence of brain tumor
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 MRI-detection/
@@ -55,7 +55,7 @@ MRI-detection/
 
 ---
 
-## ▶️ How to Run the Project
+##  How to Run the Project
 
 ### 1. Clone the repository
 
@@ -84,7 +84,7 @@ http://127.0.0.1:5000/
 
 ---
 
-## ⚠️ Important Note
+##  Important Note
 
 The trained model file is not included in this repository due to size limitations.
 
@@ -96,13 +96,13 @@ python train.py
 
 ---
 
-## 📷 Demo
+##  Demo
 
 (Add a screenshot of your web app here)
 
 ---
 
-## 🎯 Future Improvements
+##  Future Improvements
 
 * Improve model accuracy
 * Add better UI/UX
@@ -111,6 +111,6 @@ python train.py
 
 ---
 
-## 👨‍💻 Author
+##  Author
 
 **Shivansh Joshi**
