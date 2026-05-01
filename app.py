@@ -1,12 +1,3 @@
-"""
-app.py — Brain Tumor Detection Flask Backend
-=============================================
-Serves the web UI and handles image upload + model inference.
-
-Run: python app.py
-Then open: http://localhost:5000
-"""
-
 import os
 import uuid
 import numpy as np
@@ -17,17 +8,15 @@ import tensorflow as tf
 
 app = Flask(__name__)
 
-# Max upload size: 10 MB
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 MODEL_PATH    = os.path.join("model", "brain_tumor_model.h5")
 ALLOWED_EXT   = {"jpg", "jpeg", "png", "webp"}
-IMG_SIZE      = 224   # Must match train.py
+IMG_SIZE      = 224  
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ─── Load Model Once at Startup ───────────────────────────────────────────────
 print("[INFO] Loading model...")
 if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(
@@ -39,7 +28,6 @@ if not os.path.exists(MODEL_PATH):
 model = tf.keras.models.load_model(MODEL_PATH)
 print(f"[INFO] Model loaded from {MODEL_PATH}")
 
-# ─── Helper Functions ─────────────────────────────────────────────────────────
 def allowed_file(filename: str) -> bool:
     """Check if uploaded file has an allowed extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
@@ -56,7 +44,7 @@ def preprocess_image(image_path: str) -> np.ndarray:
     img = Image.open(image_path).convert("RGB")
     img = img.resize((IMG_SIZE, IMG_SIZE))
     arr = np.array(img, dtype=np.float32) / 255.0
-    return np.expand_dims(arr, axis=0)   # shape: (1, 224, 224, 3)
+    return np.expand_dims(arr, axis=0)  
 
 
 def predict(image_path: str) -> dict:
@@ -71,7 +59,6 @@ def predict(image_path: str) -> dict:
     processed = preprocess_image(image_path)
     raw_score  = float(model.predict(processed, verbose=0)[0][0])
 
-    # sigmoid output: >0.5 = tumor, <=0.5 = no tumor
     is_tumor   = raw_score > 0.5
     confidence = raw_score * 100 if is_tumor else (1 - raw_score) * 100
 
@@ -90,7 +77,6 @@ def predict(image_path: str) -> dict:
         "risk_level": risk,
     }
 
-# ─── Routes ───────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
     """Serve the main UI page."""
@@ -104,7 +90,7 @@ def predict_route():
     Expects: multipart/form-data with field 'file' containing an MRI image.
     Returns: JSON with prediction results.
     """
-    # 1. Validate request
+
     if "file" not in request.files:
         return jsonify({"error": "No file provided."}), 400
 
@@ -116,19 +102,16 @@ def predict_route():
     if not allowed_file(file.filename):
         return jsonify({"error": "Invalid file type. Upload JPG, JPEG, or PNG."}), 400
 
-    # 2. Save uploaded file with a unique name (prevents collisions)
     ext      = file.filename.rsplit(".", 1)[1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
-    # 3. Run prediction
     try:
         result = predict(filepath)
     except Exception as e:
         return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
-    # 4. Return result + image URL for display
     result["image_url"] = f"/static/uploads/{filename}"
     return jsonify(result)
 
@@ -139,7 +122,6 @@ def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 
-# ─── Entry Point ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print("🧠 Brain Tumor Detection App")
     print("   Open http://localhost:5000 in your browser\n")
