@@ -98,7 +98,7 @@ python train.py
 
 ##  Demo
 
-(Add a screenshot of your web app here)
+https://github.com/Shivansh-Joshii/MRI-detection/blob/main/demo/Screenshot%202026-05-01%20181445.png
 
 ---
 
